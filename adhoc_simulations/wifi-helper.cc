@@ -125,7 +125,7 @@ WifiHelper::Install (const WifiPhyHelper &phyHelper,
                      const WifiMacHelper &macHelper, NodeContainer c, int code, int symbols,int recode,int RelayActivity) const
 {
   NetDeviceContainer devices;
-  std::cout << "salam  " << symbols << std::endl;
+
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
     {
       Ptr<Node> node;
