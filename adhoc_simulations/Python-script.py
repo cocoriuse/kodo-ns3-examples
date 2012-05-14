@@ -52,7 +52,7 @@ for k in range(1,4):
 	m_throughput=list()
 	s_r=list()
 	r_d=list()
-	for j in range(1, 100):
+	for j in range(1, 2):
         
 		results_inc1 =list()
 		results_Ninc1 = list()
@@ -64,10 +64,11 @@ for k in range(1,4):
 		receieve_source1 =list()
 		time_list1 = list()
 		throughput1 = list()
-		for n in range(1, 20):
+		for n in range(1, 3):
 			f=open(filename,'w')
 			distance=(k*250-500)
-			cmd = ["./waf","--run", "test --numPackets=1800 --EnableCode=1  --Symbols=30 --seed={} --EnableRencode={} --RelayActivity={} --distance={}".format(n,code,100-j,distance)]
+
+			cmd = ["./build/linux/adhoc", "--numPackets=900 --EnableCode=1  --Symbols=30 --seed={} --EnableRencode={} --RelayActivity={} --distance={}".format(n,code,100-j,distance)]
 			#print " ".join(cmd)
 			print cmd
 			print j
@@ -173,7 +174,7 @@ for k in range(1,4):
 	print len(m_results_sent)
 	#x = numpy.array(range(10))
 	#y = numpy.array(range(10))
-	t = numpy.arange(0.01, 1, 0.01)
+	t = numpy.arange(1, 2, 1)
 
 	print len(t)
 	print m_results_inc	

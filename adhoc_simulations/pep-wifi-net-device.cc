@@ -24,7 +24,7 @@ PepWifiNetDevice::PepWifiNetDevice ()
   code = 1;
   sent_packet = 0;
   interval = 0.5;
-  generation = 0;
+  generation = 1;
   received = 0;
   countcode = 0;
   from_source = 0;
@@ -81,6 +81,75 @@ PepWifiNetDevice::~PepWifiNetDevice ()
 }
 
 
+void PepWifiNetDevice::SetPromiscReceiveCallback (PromiscReceiveCallback cb){
+	
+  m_PromiscReceiveCallback=cb;
+
+  if (code == 1)
+    {
+      WifiNetDevice::SetPromiscReceiveCallback (ns3::MakeCallback (&PepWifiNetDevice::promisc, this));
+    }
+  else
+    {
+      WifiNetDevice::SetPromiscReceiveCallback (m_PromiscReceiveCallback);
+    }
+
+}
+
+bool
+PepWifiNetDevice::promisc (Ptr<NetDevice> device, Ptr<const Packet> packet1, uint16_t type,
+                                    const Address & from, const Address & to, enum NetDevice::PacketType typ)
+{
+
+  Mac48Address des = Mac48Address ("00:00:00:00:00:01");
+  Mac48Address source = Mac48Address ("00:00:00:00:00:02");
+	
+      if (typ != NetDevice::PACKET_OTHERHOST || type==2054 || from == des)
+	return true;	   
+
+      Ptr<Packet> packet = packet1->Copy ();
+      CodeHeader h1;
+      packet->RemoveHeader (h1);
+       
+      std::cout << "received_relay:" << received_relay++<< endl;	
+
+      if ( recode == 1)
+        {
+
+          Ptr<Packet> pkt = rencoding ( packet,(int)h1.GetGeneration ());
+          pkt->AddHeader (h1);
+          srand ( seed );
+          seed++;
+
+          if ((rand () % 100 + 1) > relay_activity)
+            {
+         
+              // Send recoded packet
+              WifiNetDevice::Send (pkt,to,type );
+              sent_code++;
+              cout << "sent_code:" << sent_code << endl;
+
+            }
+        }
+      else
+        {
+          // Just forwarding
+          packet->AddHeader (h1);
+          srand ( (int)h1.GetGeneration () );
+	  seed++;
+
+          if ((rand () % 100 + 1) > relay_activity)
+            {
+              sent_code++;
+              cout << "sent_code:" << sent_code << endl;
+              WifiNetDevice::Send (packet,to,type );
+            }
+        
+     
+      }
+   return true;  
+}
+
 
 void PepWifiNetDevice::SetReceiveCallback (NetDevice::ReceiveCallback receiveCallback)
 {
@@ -97,6 +166,9 @@ void PepWifiNetDevice::SetReceiveCallback (NetDevice::ReceiveCallback receiveCal
       WifiNetDevice::SetReceiveCallback (m_receiveCallback);
     }
 }
+
+
+
 
 
 Ptr<Packet>
@@ -126,15 +198,28 @@ bool
 PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
                                                                  Packet > packet1, uint16_t type, const Address & from)
 {
+ 
+  PointerValue ptr;
+  GetAttribute ("Mac",ptr);
+  Ptr<AdhocWifiMac> m_mac = ptr.Get<AdhocWifiMac> ();
+  cout << "khobiii!!!"  << from << endl;
+  if ( type == 2054){
+
+     m_mac->NotifyRx (packet1);
+     m_receiveCallback (this, packet1, type, from);
+     cout << "received an ARP packet!!!"  << from << endl;
+     cout << "how am i"<< m_mac->GetAddress ()<<endl;
+     return true;
+	}
+
+
   cout << "Max symbols" << max_symbols << endl;
 
   Ptr<Packet> packet = packet1->Copy ();
   Mac48Address des = Mac48Address ("00:00:00:00:00:01");
   Mac48Address source = Mac48Address ("00:00:00:00:00:02");
 
-  PointerValue ptr;
-  GetAttribute ("Mac",ptr);
-  Ptr<AdhocWifiMac> m_mac = ptr.Get<AdhocWifiMac> ();
+ 
 
   if (from == source && m_mac->GetAddress () == des)
     {
@@ -142,45 +227,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
       from_source++;
     }
 
-  if (m_mac->GetAddress () != source && (m_mac->GetAddress () != des))
-    {
-      CodeHeader h1;
-      packet->RemoveHeader (h1);
-      std::cout << "received_relay:" << received_relay++<< endl;	
-
-      if ( recode == 1)
-        {
-
-          Ptr<Packet> pkt = rencoding ( packet,(int)h1.GetGeneration ());
-          pkt->AddHeader (h1);
-          srand ( seed );
-          seed++;
-   
-          if ((rand () % 100 + 1) > relay_activity)
-            {
-              // Send recoded packet
-              WifiNetDevice::Send (pkt,des,type );
-              sent_code++;
-              cout << "sent_code:" << sent_code << endl;
-
-            }
-        }
-      else
-        {
-          // Just forwarding
-          packet->AddHeader (h1);
-          srand ( (int)h1.GetGeneration () );
-	  seed++;
-
-          if ((rand () % 100 + 1) > relay_activity)
-            {
-              sent_code++;
-              cout << "sent_code:" << sent_code << endl;
-              WifiNetDevice::Send (packet,des,type );
-            }
-        }
-      return true;    
-      }
+  
 
   if ( m_mac->GetAddress () == source && from == des)
     {
@@ -188,6 +235,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
       packet->RemoveHeader (h1);
       cout << "Generation is decoded:" << (int)h1.GetGeneration () << endl;
       decoded_flag[(int)h1.GetGeneration ()] = 1;
+	
       return true; 
     }
 
@@ -260,8 +308,9 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
       
 
           Ptr<Packet> ACK = Create<Packet> (10);
+
           ACK->AddHeader (h1);
-          WifiNetDevice::Send (ACK,Mac48Address ("00:00:00:00:00:02"),100 );
+          WifiNetDevice::Send (ACK,from,100 );
 
           std::vector<uint8_t> data_out (decoding[h1.GetGeneration ()]->block_size ());
           kodo::copy_symbols (kodo::storage (data_out), decoding[h1.GetGeneration ()]);
@@ -296,14 +345,17 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
 bool PepWifiNetDevice::Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber)
 {
 
-  if (code == 1)
+cout << "protocol number" << protocolNumber << endl;
+cout << "destination" << dest << endl;
+  if (code == 1 && protocolNumber !=2054)
     {
       cout << "coding is enabled" << flush;
       coding (packet,dest, protocolNumber);
+	
     }
   else
     {
-      cout << "coding is disabled" << endl;
+      cout << "coding is disabled " << endl;
       WifiNetDevice::Send (packet,dest,protocolNumber);
     }
 
