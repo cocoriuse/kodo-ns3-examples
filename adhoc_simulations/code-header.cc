@@ -6,14 +6,16 @@ namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED (CodeHeader);
 
 CodeHeader::CodeHeader ()
-  : m_destinationPort (0)
+  : m_generation (0)
+
 {
+	code=1;
 }
 CodeHeader::~CodeHeader ()
 {
 
-  m_destinationPort = 0;
-
+  m_generation = 0;
+  code=0;
 }
 
 
@@ -34,13 +36,13 @@ CodeHeader::GetInstanceTypeId (void) const
 uint32_t
 CodeHeader::GetSerializedSize (void) const
 {
-  return 2;
+  return 4;
 }
 void
 CodeHeader::Serialize (Buffer::Iterator start) const
 {
   // The 2 byte-constant
-  start.WriteHtonU16 (m_destinationPort);
+  start.WriteHtonU16 (m_generation);
 
 
 
@@ -48,26 +50,39 @@ CodeHeader::Serialize (Buffer::Iterator start) const
 uint32_t
 CodeHeader::Deserialize (Buffer::Iterator start)
 {
-  m_destinationPort = start.ReadNtohU16 ();
-  return 2; // the number of bytes consumed.
+  m_generation = start.ReadNtohU16 ();
+  return 4; // the number of bytes consumed.
 }
 void
 CodeHeader::Print (std::ostream &os) const
 {
-  os << m_destinationPort;
+  os << m_generation;
 }
 
 void
-CodeHeader::SetGeneration (uint16_t port)
+CodeHeader::SetGeneration (uint16_t generation)
 {
-  m_destinationPort = port;
+  m_generation = generation;
 }
 
 uint16_t
 CodeHeader::GetGeneration (void) const
 {
-  return m_destinationPort;
+  return m_generation;
 }
 
+void CodeHeader::EnableCode (void) 
+{
+code=1;
+}
+
+void CodeHeader::DisableCode (void) 
+{
+code=0;
+}
+uint16_t CodeHeader::GetCode (void) 
+{
+return code;
+}
 
 }

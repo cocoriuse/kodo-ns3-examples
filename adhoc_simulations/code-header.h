@@ -17,8 +17,10 @@ public:
   ~CodeHeader ();
   void SetGeneration (uint16_t port);
   uint16_t GetGeneration (void) const;
-
-
+  void EnableCode (void);
+  void DisableCode (void);
+  uint16_t GetCode (void) ;
+  
   // must be implemented to become a valid new header.
   static TypeId GetTypeId (void);
   virtual TypeId GetInstanceTypeId (void) const;
@@ -29,7 +31,8 @@ public:
   // allow protocol-specific access to the header data.
 
 private:
-  uint16_t m_destinationPort;
+  uint16_t m_generation;
+  uint16_t code;
 
 };
 }

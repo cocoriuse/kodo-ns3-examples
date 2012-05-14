@@ -104,13 +104,18 @@ PepWifiNetDevice::promisc (Ptr<NetDevice> device, Ptr<const Packet> packet1, uin
   Mac48Address des = Mac48Address ("00:00:00:00:00:01");
   Mac48Address source = Mac48Address ("00:00:00:00:00:02");
 	
-      if (typ != NetDevice::PACKET_OTHERHOST || type==2054 || from == des)
-	return true;	   
-
+      if (typ != NetDevice::PACKET_OTHERHOST || type==2054  )
+	      return true;	   
+	
       Ptr<Packet> packet = packet1->Copy ();
       CodeHeader h1;
       packet->RemoveHeader (h1);
-       
+      if(from==des){
+      	 std::cout << "Heollo:" << h1.GetCode()<< endl;	
+			return true;
+			}
+       	
+		
       std::cout << "received_relay:" << received_relay++<< endl;	
 
       if ( recode == 1)
@@ -308,8 +313,12 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
       
 
           Ptr<Packet> ACK = Create<Packet> (10);
+             CodeHeader h2;
+			h2.DisableCode	();
+	      std::cout << "slooo:" << h2.GetCode()<< endl;	
+	      std::cout << "slooo:" << from<< endl;	
 
-          ACK->AddHeader (h1);
+          ACK->AddHeader (h2);
           WifiNetDevice::Send (ACK,from,100 );
 
           std::vector<uint8_t> data_out (decoding[h1.GetGeneration ()]->block_size ());
