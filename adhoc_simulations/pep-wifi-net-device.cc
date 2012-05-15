@@ -236,8 +236,13 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
 
 		CodeHeader h1;
 		packet->RemoveHeader (h1);
+		
 		Mac48Address source=h1.GetSourceMAC();
 		
+		
+		  cout << "from: " << from<< endl;
+  		  cout << "dource: " << source<< endl;
+
   if (from == source )
     {
 			
@@ -323,8 +328,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
           Ptr<Packet> ACK = Create<Packet> (10);
 
 			h1.DisableCode	();
-	      std::cout << "slooo:" << h1.GetCode()<< endl;	
-	      std::cout << "source recieved fromm :" << from<< endl;	
+	  
 
           ACK->AddHeader (h1);
           WifiNetDevice::Send (ACK,from,100 );
@@ -339,7 +343,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
 
               Ptr<Packet> pkt = Create<Packet> (buffer1,max_size);
               m_mac->NotifyRx (pkt);
-              m_receiveCallback (this, pkt, type, Mac48Address ("00:00:00:00:00:01"));
+              m_receiveCallback (this, pkt, type, from);
 
             }
 
@@ -350,7 +354,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
           Ptr<Packet> ACK = Create<Packet> (10);
           h1.DisableCode	();
           ACK->AddHeader (h1);
-          WifiNetDevice::Send (ACK,Mac48Address ("00:00:00:00:00:02"),100 );
+          WifiNetDevice::Send (ACK,source,100 );
 
         }
 
