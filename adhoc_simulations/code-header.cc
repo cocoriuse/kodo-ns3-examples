@@ -6,16 +6,18 @@ namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED (CodeHeader);
 
 CodeHeader::CodeHeader ()
-  : m_generation (0)
+  : m_generation (0),
+  m_code(1)
 
 {
-	code=1;
+	
 }
 CodeHeader::~CodeHeader ()
 {
 
   m_generation = 0;
-  code=0;
+  m_code = 0;
+
 }
 
 
@@ -36,27 +38,34 @@ CodeHeader::GetInstanceTypeId (void) const
 uint32_t
 CodeHeader::GetSerializedSize (void) const
 {
-  return 4;
+  return 14;
 }
 void
 CodeHeader::Serialize (Buffer::Iterator start) const
 {
-  // The 2 byte-constant
-  start.WriteHtonU16 (m_generation);
-
-
-
+  Buffer::Iterator i = start;
+  i.WriteHtonU16 (m_generation);
+  i.WriteHtonU16 (m_code);
+  WriteTo (i, m_source_mac);
+  WriteTo (i, m_destination_ip);
 }
 uint32_t
 CodeHeader::Deserialize (Buffer::Iterator start)
 {
-  m_generation = start.ReadNtohU16 ();
-  return 4; // the number of bytes consumed.
+  Buffer::Iterator i = start;
+  m_generation = i.ReadNtohU16 ();
+  m_code=i.ReadNtohU16 ();
+  ReadFrom (i, m_source_mac);
+  ReadFrom (i, m_destination_ip);
+  return 14; // the number of bytes consumed.
 }
 void
 CodeHeader::Print (std::ostream &os) const
 {
   os << m_generation;
+  os << m_code ;
+  os << m_source_mac;
+  os << m_destination_ip;
 }
 
 void
@@ -73,16 +82,41 @@ CodeHeader::GetGeneration (void) const
 
 void CodeHeader::EnableCode (void) 
 {
-code=1;
+m_code=1;
 }
 
 void CodeHeader::DisableCode (void) 
 {
-code=0;
+m_code=0;
 }
 uint16_t CodeHeader::GetCode (void) 
 {
-return code;
+return m_code;
 }
+
+Mac48Address CodeHeader::GetSourceMAC (void) 
+{
+return m_source_mac;
+}
+
+
+
+
+Ipv4Address CodeHeader::GetDestinationIp (void) 
+{
+return m_destination_ip;
+}
+
+void CodeHeader::SetSourceMAC (Mac48Address source) 
+{
+ m_source_mac=source;
+}
+
+void CodeHeader::SetDestinationIp (Ipv4Address destination) 
+{
+ m_destination_ip=destination;
+}
+
+
 
 }

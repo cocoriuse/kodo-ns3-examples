@@ -6,7 +6,7 @@
 #include <ns3/adhoc-wifi-mac.h>
 #include <ns3/packet.h>
 #include <ns3/llc-snap-header.h>
-
+#include <ns3/ipv4-header.h>
 NS_LOG_COMPONENT_DEFINE ("PepWifiNetDevice");
 namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED (PepWifiNetDevice);
@@ -94,34 +94,41 @@ void PepWifiNetDevice::SetPromiscReceiveCallback (PromiscReceiveCallback cb){
       WifiNetDevice::SetPromiscReceiveCallback (m_PromiscReceiveCallback);
     }
 
-}
+}	
 
 bool
 PepWifiNetDevice::promisc (Ptr<NetDevice> device, Ptr<const Packet> packet1, uint16_t type,
                                     const Address & from, const Address & to, enum NetDevice::PacketType typ)
 {
 
-  Mac48Address des = Mac48Address ("00:00:00:00:00:01");
-  Mac48Address source = Mac48Address ("00:00:00:00:00:02");
+
+	Ptr<Packet> packet = packet1->Copy ();
+	CodeHeader h1;
+	packet->RemoveHeader (h1);
+	  
+  PointerValue ptr;
+  GetAttribute ("Mac",ptr);
+  Ptr<AdhocWifiMac> m_mac = ptr.Get<AdhocWifiMac> ();
+	  
+
 	
-      if (typ != NetDevice::PACKET_OTHERHOST || type==2054  )
+      if (typ != NetDevice::PACKET_OTHERHOST || type==2054 || h1.GetCode() == 0 || h1.GetSourceMAC() == m_mac->GetAddress ())
 	      return true;	   
 	
-      Ptr<Packet> packet = packet1->Copy ();
-      CodeHeader h1;
-      packet->RemoveHeader (h1);
-      if(from==des){
-      	 std::cout << "Heollo:" << h1.GetCode()<< endl;	
-			return true;
-			}
+ 
        	
-		
+	
+       	//Ipv4Header ip;
+      // 	packet2->RemoveHeader(ip);
+      // 	packet2->AddHeader(ip);
       std::cout << "received_relay:" << received_relay++<< endl;	
 
       if ( recode == 1)
         {
+      std::cout << "hi1:" <<h1.GetGeneration () << endl;	
 
           Ptr<Packet> pkt = rencoding ( packet,(int)h1.GetGeneration ());
+            std::cout << "hi2:" << endl;	
           pkt->AddHeader (h1);
           srand ( seed );
           seed++;
@@ -207,7 +214,8 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
   PointerValue ptr;
   GetAttribute ("Mac",ptr);
   Ptr<AdhocWifiMac> m_mac = ptr.Get<AdhocWifiMac> ();
-  cout << "khobiii!!!"  << from << endl;
+  cout << "received from"  << from << endl;
+ 
   if ( type == 2054){
 
      m_mac->NotifyRx (packet1);
@@ -221,38 +229,38 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
   cout << "Max symbols" << max_symbols << endl;
 
   Ptr<Packet> packet = packet1->Copy ();
-  Mac48Address des = Mac48Address ("00:00:00:00:00:01");
-  Mac48Address source = Mac48Address ("00:00:00:00:00:02");
+
+
 
  
 
-  if (from == source && m_mac->GetAddress () == des)
+		CodeHeader h1;
+		packet->RemoveHeader (h1);
+		Mac48Address source=h1.GetSourceMAC();
+		
+  if (from == source )
     {
+			
       cout << "from_source:" << from_source << endl;
       from_source++;
     }
 
   
 
-  if ( m_mac->GetAddress () == source && from == des)
+  if ( m_mac->GetAddress () == source )
     {
-      CodeHeader h1;
-      packet->RemoveHeader (h1);
+
       cout << "Generation is decoded:" << (int)h1.GetGeneration () << endl;
       decoded_flag[(int)h1.GetGeneration ()] = 1;
 	
       return true; 
     }
 
-  if (m_mac->GetAddress () == des && code == 1)
+  if ( code == 1)
     {
       received++;
       cout << "received:" << received << endl;
       uint8_t *buffer1 = new uint8_t[packet->GetSize ()];
-
-      CodeHeader h1;
-      packet->RemoveHeader (h1);
-
 
       if (from != source)
         {
@@ -313,12 +321,12 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
       
 
           Ptr<Packet> ACK = Create<Packet> (10);
-             CodeHeader h2;
-			h2.DisableCode	();
-	      std::cout << "slooo:" << h2.GetCode()<< endl;	
-	      std::cout << "slooo:" << from<< endl;	
 
-          ACK->AddHeader (h2);
+			h1.DisableCode	();
+	      std::cout << "slooo:" << h1.GetCode()<< endl;	
+	      std::cout << "source recieved fromm :" << from<< endl;	
+
+          ACK->AddHeader (h1);
           WifiNetDevice::Send (ACK,from,100 );
 
           std::vector<uint8_t> data_out (decoding[h1.GetGeneration ()]->block_size ());
@@ -340,6 +348,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
         {
 
           Ptr<Packet> ACK = Create<Packet> (10);
+          h1.DisableCode	();
           ACK->AddHeader (h1);
           WifiNetDevice::Send (ACK,Mac48Address ("00:00:00:00:00:02"),100 );
 
@@ -422,6 +431,10 @@ PepWifiNetDevice::coding (Ptr<Packet> packet, const Address& dest, uint16_t prot
   NS_ASSERT (Mac48Address::IsMatchingType (dest));
   Mac48Address realTo = Mac48Address::ConvertFrom (dest);
 
+  PointerValue ptr;
+  GetAttribute ("Mac",ptr);
+  Ptr<AdhocWifiMac> m_mac = ptr.Get<AdhocWifiMac> ();
+
   int k = 0;
 
   Enqueue1 (packet);
@@ -434,6 +447,7 @@ PepWifiNetDevice::coding (Ptr<Packet> packet, const Address& dest, uint16_t prot
 
       CodeHeader h1;
       h1.SetGeneration (generation);
+      h1.SetSourceMAC(m_mac->GetAddress());
       generation++;
 
       Ptr<coded> m_coded = Create<coded> ();
