@@ -4,7 +4,7 @@
 
 #include <ns3/wifi-net-device.h>
 #include <ns3/packet.h>
-#include <ns3/adhoc-wifi-mac.h>
+
 #include <kodo/rlnc/full_vector_codes.h>
 #include "code-header.h"
 
@@ -42,8 +42,6 @@ public:
   int countcode;
   int max_symbols;
   int max_size;
-  Mac48Address Origin;
-  int m_data;
   int from_source;
   int from_relay;
   int rank;
@@ -73,7 +71,6 @@ public:
     uint16_t protocolNumber;
     CodeHeader h1;
     Mac48Address realTo;
-    
   };
 
   std::list<Ptr<Packet> > m_queue;
@@ -94,24 +91,20 @@ public:
   // PacketQueue m_queue;
 
 public:
-  bool test_promisc(Ptr<NetDevice> device, Ptr<const Packet> packet, uint16_t type, 
-                    const Address & from, const Address & to, enum NetDevice::PacketType typ);
-
-public:
   // From WifiNetDevice
   virtual bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
   virtual void SetReceiveCallback (NetDevice::ReceiveCallback cb);
-  //virtual void SetPromiscReceiveCallback (PromiscReceiveCallback  cb);
+  //virtual void SetPromiscReceiveCallback (PromiscReceiveCallback cb);
 public:
   Ptr<Packet> rencoding (Ptr<Packet> packet,int seq);
-   bool ReceivedSink (Ptr<NetDevice> device, Ptr<const Packet> packet1, uint16_t type,const Address & from);
+  bool DecodingReceive (Ptr< NetDevice > device, Ptr< const Packet > packet, uint16_t type, const Address & from);
+  bool promisc (Ptr<NetDevice> device, Ptr<const Packet> packet, uint16_t type,const Address & from, const Address & to, enum NetDevice::PacketType typ);
   virtual bool coding (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
-  void SendCode (Ptr <coded> m_coded);
-  
-  // The ns3 function which handle incomming packets
-  PromiscReceiveCallback  m_promiscReceiveCallback;
-  NetDevice::ReceiveCallback m_receiveCallback;
+  void SendCode (Ptr <coded> m_coded );
 
+  // The ns3 function which handle incomming packets
+  NetDevice::ReceiveCallback m_receiveCallback;
+  NetDevice::PromiscReceiveCallback m_PromiscReceiveCallback;
 
 
 };

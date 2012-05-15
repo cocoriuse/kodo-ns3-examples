@@ -5,7 +5,8 @@
 #include <stdint.h>
 #include <string>
 #include <ns3/header.h>
-#include <ns3/mac48-address.h>
+#include <ns3/ipv4-address.h>
+#include <ns3/ipv6-address.h>
 
 namespace ns3 {
 
@@ -14,9 +15,11 @@ class CodeHeader : public Header
 public:
   CodeHeader ();
   ~CodeHeader ();
-  void SetGeneration (uint16_t gen);
+  void SetGeneration (uint16_t port);
   uint16_t GetGeneration (void) const;
-
+  void SetACK (int ackflag);
+  int GetACK (void) const;
+  
   // must be implemented to become a valid new header.
   static TypeId GetTypeId (void);
   virtual TypeId GetInstanceTypeId (void) const;
@@ -28,7 +31,7 @@ public:
 
 private:
   uint16_t m_generation;
-  
+  int m_ack;
 
 };
 }

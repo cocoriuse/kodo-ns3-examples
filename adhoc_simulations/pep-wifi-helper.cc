@@ -1,4 +1,3 @@
-
 #include "pep-wifi-helper.h"
 #include "pep-wifi-net-device.h"
 #include <ns3/wifi-helper.h>
@@ -52,14 +51,13 @@ PepWifiHelper::Install (const WifiPhyHelper &phyHelper,
       mac->SetPromisc();
       //give a new mac address
       mac->SetAddress (Mac48Address::Allocate ());
-      //
+  
       mac->ConfigureStandard (m_standard);
       phy->ConfigureStandard (m_standard);
       device->SetMac (mac);
       device->SetPhy (phy);
       device->SetRemoteStationManager (manager);
-      device->SetPromiscReceiveCallback(ns3::MakeCallback(&PepWifiNetDevice::test_promisc, device));
-      //device->SetPromiscReceiveCallback(ns3::MakeCallback(&Node::PromiscReceiveFromDevice, node));
+      device->SetPromiscReceiveCallback(ns3::MakeCallback(&PepWifiNetDevice::promisc, device));
       node->AddDevice (device);
       devices.Add (device);
       NS_LOG_DEBUG ("node=" << node << ", mob=" << node->GetObject<MobilityModel> ());
@@ -112,9 +110,9 @@ PepWifiHelper::EnableLogComponents (void)
   LogComponentEnable ("MacLow", LOG_LEVEL_ALL);
   LogComponentEnable ("MacRxMiddle", LOG_LEVEL_ALL);
   LogComponentEnable ("MsduAggregator", LOG_LEVEL_ALL);
-  LogComponentEnable ("MsduStandardAggregator", LOG_LEVEL_ALL);  
+  LogComponentEnable ("MsduStandardAggregator", LOG_LEVEL_ALL);
   LogComponentEnable ("NistErrorRateModel", LOG_LEVEL_ALL);
-  LogComponentEnable ("OnoeWifiRemoteStation", LOG_LEVEL_ALL); 
+  LogComponentEnable ("OnoeWifiRemoteStation", LOG_LEVEL_ALL);
   LogComponentEnable ("PropagationLossModel", LOG_LEVEL_ALL);
   LogComponentEnable ("RegularWifiMac", LOG_LEVEL_ALL);
   LogComponentEnable ("RraaWifiManager", LOG_LEVEL_ALL);

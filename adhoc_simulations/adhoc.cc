@@ -1,55 +1,3 @@
-/* -*- Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
-/*
-* Copyright (c) 2009 The Boeing Company
-*
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License version 2 as
-* published by the Free Software Foundation;
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*
-*/
-
-//
-// This script configures two nodes on an 802.11b physical layer, with
-// 802.11b NICs in adhoc mode, and by default, sends one packet of 1000
-// (application) bytes to the other node. The physical layer is configured
-// to receive at a fixed RSS (regardless of the distance and transmit
-// power); therefore, changing position of the nodes has no effect.
-//
-// There are a number of command-line options available to control
-// the default behavior. The list of available command-line options
-// can be listed with the following command:
-// ./waf --run "wifi-simple-adhoc --help"
-//
-// For instance, for this configuration, the physical layer will
-// stop successfully receiving packets when rss drops below -97 dBm.
-// To see this effect, try running:
-//
-// ./waf --run "wifi-simple-adhoc --rss=-97 --numPackets=20"
-// ./waf --run "wifi-simple-adhoc --rss=-98 --numPackets=20"
-// ./waf --run "wifi-simple-adhoc --rss=-99 --numPackets=20"
-//
-// Note that all ns-3 attributes (not just the ones exposed in the below
-// script) can be changed at command line; see the documentation.
-//
-// This script can also be helpful to put the Wifi layer into verbose
-// logging mode; this command will turn on all wifi logging:
-//
-// ./waf --run "wifi-simple-adhoc --verbose=1"
-//
-// When you are done, you will notice two pcap trace files in your directory.
-// If you have tcpdump installed, you can try this:
-//
-// tcpdump -r wifi-simple-adhoc-0-0.pcap -nn -tt
-//
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/mobility-module.h>
@@ -148,7 +96,7 @@ int main (int argc, char *argv[])
 
   NodeContainer c;
   //Create 3 nodes
-  c.Create (2);
+  c.Create (3);
   //???????
   Config::SetDefault ("ns3::WifiRemoteStationManager::MaxSsrc",
 StringValue("1"));
@@ -210,12 +158,12 @@ StringValue("1"));
   mobility.Install (c);
 
 // Enable OLSR
-//  OlsrHelper olsr;
-//  Ipv4StaticRoutingHelper staticRouting;
+// OlsrHelper olsr;
+// Ipv4StaticRoutingHelper staticRouting;
 
-//  Ipv4ListRoutingHelper list;
-//  list.Add (staticRouting, 0);
-//  list.Add (olsr, 10);
+// Ipv4ListRoutingHelper list;
+// list.Add (staticRouting, 0);
+// list.Add (olsr, 10);
 
   //InternetStackHelper internet;
  // internet.SetRoutingHelper (list); // has effect on the next Install ()
@@ -239,7 +187,7 @@ StringValue("1"));
 
   NS_LOG_DEBUG("remote addr " << c.Get(0)->GetDevice(0)->GetAddress());
 
-  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("10.1.1.100"), 80);
+  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("10.1.1.1"), 80);
   source->SetAllowBroadcast (false);
   source->Connect (remote);
 

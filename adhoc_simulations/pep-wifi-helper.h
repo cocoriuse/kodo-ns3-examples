@@ -1,4 +1,3 @@
-
 #ifndef PEP_WIFI_HELPER_H
 #define PEP_WIFI_HELPER_H
 
@@ -46,6 +45,5 @@ private:
 
 };
 
-} // namespace ns3
-
-#endif /* PEP_WIFI_HELPER_H */
+}
+#endif

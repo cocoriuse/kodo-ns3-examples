@@ -7,13 +7,15 @@ NS_OBJECT_ENSURE_REGISTERED (CodeHeader);
 
 CodeHeader::CodeHeader ()
   : m_generation (0)
+
 {
+m_ack=1;
 }
 CodeHeader::~CodeHeader ()
 {
 
   m_generation = 0;
-
+  m_ack=0;
 }
 
 
@@ -34,7 +36,7 @@ CodeHeader::GetInstanceTypeId (void) const
 uint32_t
 CodeHeader::GetSerializedSize (void) const
 {
-  return 2;
+  return 4;
 }
 void
 CodeHeader::Serialize (Buffer::Iterator start) const
@@ -49,7 +51,7 @@ uint32_t
 CodeHeader::Deserialize (Buffer::Iterator start)
 {
   m_generation = start.ReadNtohU16 ();
-  return 2; // the number of bytes consumed.
+  return 4; // the number of bytes consumed.
 }
 void
 CodeHeader::Print (std::ostream &os) const
@@ -58,13 +60,10 @@ CodeHeader::Print (std::ostream &os) const
 }
 
 void
-CodeHeader::SetGeneration (uint16_t gen)
+CodeHeader::SetGeneration (uint16_t generation)
 {
-  m_generation = gen;
+  m_generation = generation;
 }
-
-
-
 
 uint16_t
 CodeHeader::GetGeneration (void) const
@@ -72,5 +71,20 @@ CodeHeader::GetGeneration (void) const
   return m_generation;
 }
 
+void
+CodeHeader::SetACK (int ackflag)
+{
+  m_ack = ackflag;
+}
+
+int
+CodeHeader::GetACK (void) const
+{
+  return m_ack;
+}
+
 
 }
+
+
+
