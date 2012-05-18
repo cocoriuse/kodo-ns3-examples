@@ -23,6 +23,7 @@ PepWifiNetDevice::PepWifiNetDevice ()
   NS_LOG_FUNCTION_NOARGS ();
   code = 1;
   sent_packet = 0;
+  recodedNum=0;
   interval = 0.5;
   generation = 1;
   received = 0;
@@ -40,7 +41,11 @@ PepWifiNetDevice::PepWifiNetDevice ()
   payload.resize (encoder->payload_size ());
   relay_activity = 100;
   seed = 100;
- received_relay=0;
+  received_relay=0;
+  numNodes=3;
+  arrayMac [numNodes];
+  //int array [400][numNodes];//maximun generation number and num of nodes
+  buffer1 = new uint8_t[100];//packetsize defined by default 
 }
 
 
@@ -108,7 +113,7 @@ PepWifiNetDevice::promisc (Ptr<NetDevice> device, Ptr<const Packet> packet1, uin
         {
       NS_LOG_DEBUG ( "hi1:" <<h1.GetGeneration () );	
 
-          Ptr<Packet> pkt = rencoding ( packet,(int)h1.GetGeneration (),(Mac48Address)h1.GetSourceMAC());
+          Ptr<Packet> pkt = rencoding (packet,(int)h1.GetGeneration (),(Mac48Address)h1.GetSourceMAC());
             NS_LOG_DEBUG ( "hi2:" );	
           pkt->AddHeader (h1);
           srand ( seed );
@@ -163,22 +168,44 @@ void PepWifiNetDevice::SetReceiveCallback (NetDevice::ReceiveCallback receiveCal
 
 Ptr<Packet>
 PepWifiNetDevice::rencoding (Ptr<Packet> packet,int seq,Mac48Address source)
-{
+{//guessing that we have a finite number of generations!!!!!!!!!!!!!!!!!!!
   
-  
-  uint8_t *buffer1 = new uint8_t[packet->GetSize ()];
- 
- if (forward.find(seq) == forward.end() && forwardmac.find(source) == forwardmac.end()) 
+   int i=0;  
+   bool insertMac=false;
+   while (insertMac==false)
    {
-    forward[seq]= m_decoder_factory.build((max_symbols), max_size);
+     
+    if (arrayMac[i]=="00:00:00:00:00:00" ) 
+      {
+        arrayMac[i]=source;
+        NS_LOG_DEBUG ( "reconding"  << arrayMac[i]);
+        insertMac=true;
+        array[seq][i]=recodedNum++;
+        
+      }
+    else if (arrayMac[i]!=source) 
+      i++;
+    else
+      {
+      if (array[seq][i]==0)  
+         array[seq][i]=recodedNum++;
 
-   }	
+      insertMac=true;
+      }
+   }
+  
+  // uint8_t *buffer1 = new uint8_t[packet->GetSize ()];
+ 
+ if (forward.find(array[seq][i]) == forward.end()) 
+   forward[array[seq][i]]= m_decoder_factory.build((max_symbols), max_size);
+
+   	
   packet->CopyData(buffer1,packet->GetSize());
   
-  forward[seq]->decode( buffer1 );
-  forward[seq]->recode( &payload[0]);
+  forward[array[seq][i]]->decode( buffer1 );
+  forward[array[seq][i]]->recode( &payload[0]);
 
-  Ptr<Packet> pkt = Create<Packet> (&payload[0],forward[seq]->payload_size());
+  Ptr<Packet> pkt = Create<Packet> (&payload[0],forward[array[seq][i]]->payload_size());
 
 return 	pkt ;
 		
@@ -250,7 +277,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
         }
 
 
-      //inja eshkal dare
+      
           if (decoding.find((int)h1.GetGeneration()) == decoding.end())
     {
         decoding[h1.GetGeneration()]= m_decoder_factory.build((max_symbols), max_size);

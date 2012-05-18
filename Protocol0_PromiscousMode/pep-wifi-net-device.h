@@ -27,16 +27,18 @@ public:
 
 
   std::map<int, rlnc_decoder::pointer> forward;
-  std::map<Mac48Address, rlnc_decoder::pointer> forwardmac;
+  //std::map<in, rlnc_decoder::pointer> forward;
   std::map<int, rlnc_decoder::pointer> decoding;
-  std::map<Mac48Address, rlnc_decoder::pointer> decodingmac;
+  //std::map<Mac48Address, rlnc_decoder::pointer> decoding;
   std::map<int, int> decoded_flag;
 
   // @todo: int m_code (for all member varibles)
 
+  
   bool m_configComplete;
   int code;
   int recode;
+  int recodedNum;
   int sent_packet;
   double interval;
   int generation;
@@ -60,6 +62,10 @@ public:
   int relay_activity;
   int seed;
   int received_relay;
+  int numNodes;
+  Mac48Address arrayMac [];
+  int array [400][3];//maximun generation number and num of nodes
+  uint8_t *buffer1;//packetsize defined by default
   // @todo when you move out of ns3 namespace use
   // struct coded : public ns3::Object
   struct coded : public Object
